@@ -30,6 +30,8 @@ Users can log in to their account, manage multiple bank accounts, and perform mo
 - JSON Web Tokens (JWT) for authentication
 - Nodemailer (for email verification)
 
+[**Git Repo Client**](https://github.com/OffirRokach/bank-app-client)
+
 ---
  
  

@@ -257,7 +257,10 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await findUserByEmail(email);
+    // Normalize email (handles Gmail dots, casing, aliases)
+    const normalizedEmail = normalizeEmail(email);
+
+    const user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json({

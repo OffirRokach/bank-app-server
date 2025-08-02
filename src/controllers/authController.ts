@@ -156,7 +156,9 @@ export const signup = async (req: Request, res: Response) => {
     );
 
     const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    console.log("Verification link:", verificationLink);
     await sendVerificationEmail(normalizedEmail, verificationLink);
+    console.log("Email sent successfully");
 
     // Return success response with user data (excluding password)
     const responseData: SignupResponse = {

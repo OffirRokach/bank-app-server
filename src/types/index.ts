@@ -86,3 +86,10 @@ export type TransactionWithAccounts = Transaction & {
   fromAccount: { accountNumber: string };
   toAccount: { accountNumber: string };
 };
+
+export interface SendMailOptions {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}

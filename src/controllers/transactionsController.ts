@@ -9,6 +9,8 @@ import {
 } from "../repositories/transactionRepository";
 import { Decimal } from "decimal.js";
 import { JwtPayload } from "../types";
+import { notifyMoneyTransfer, isUserConnected } from "../middleware/socketMiddleware";
+import { io } from "../server";
 
 interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
@@ -174,6 +176,38 @@ export const transferFunds = async (
       amountDecimal,
       description
     );
+
+    // Send real-time notification if recipient is online
+    try {
+      // Extract sender and recipient information from the transaction
+      const senderUser = {
+        id: transaction.fromAccount.user.id,
+        firstName: transaction.fromAccount.user.firstName,
+        lastName: transaction.fromAccount.user.lastName
+      };
+
+      const recipientUser = {
+        id: transaction.toAccount.user.id,
+        firstName: transaction.toAccount.user.firstName,
+        lastName: transaction.toAccount.user.lastName
+      };
+
+      // Only send notification if recipient is online
+      // The function will not fail if recipient is offline
+      notifyMoneyTransfer(
+        io,
+        {
+          amount: amountDecimal.toNumber(),
+          createdAt: new Date()
+        },
+        senderUser,
+        recipientUser
+      );
+    } catch (notificationError) {
+      // Log notification error but don't fail the transaction
+      console.error("Error sending money transfer notification:", notificationError);
+      // Transaction still succeeded, so we continue
+    }
 
     return res.status(HTTP_STATUS.CREATED).json({
       success: true,

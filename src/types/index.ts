@@ -77,14 +77,46 @@ export interface SignupResponse {
 
 export type TransferResult = {
   transaction: Transaction & {
-    fromAccount: { accountNumber: string };
-    toAccount: { accountNumber: string };
+    fromAccount: { 
+      accountNumber: string;
+      userId: string;
+      user: {
+        id: string;
+        firstName: string;
+        lastName: string;
+      };
+    };
+    toAccount: { 
+      accountNumber: string;
+      userId: string;
+      user: {
+        id: string;
+        firstName: string;
+        lastName: string;
+      };
+    };
   };
 };
 
 export type TransactionWithAccounts = Transaction & {
-  fromAccount: { accountNumber: string };
-  toAccount: { accountNumber: string };
+  fromAccount: { 
+    accountNumber: string;
+    userId: string;
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
+  };
+  toAccount: { 
+    accountNumber: string;
+    userId: string;
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
+  };
 };
 
 export interface SendMailOptions {

@@ -25,8 +25,10 @@ export const getAccountTransactions = async (
         fromAccount: {
           select: {
             accountNumber: true,
+            userId: true,
             user: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
               },
@@ -36,8 +38,10 @@ export const getAccountTransactions = async (
         toAccount: {
           select: {
             accountNumber: true,
+            userId: true,
             user: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
               },
@@ -150,11 +154,27 @@ export const transferFunds = async (
           fromAccount: {
             select: {
               accountNumber: true,
+              userId: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                }
+              }
             },
           },
           toAccount: {
             select: {
               accountNumber: true,
+              userId: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                }
+              }
             },
           },
         },

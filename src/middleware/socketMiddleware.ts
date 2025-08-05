@@ -26,7 +26,17 @@ const connectedUsers = new Map<string, ConnectedUser>();
  * @param userService - User service for looking up user information
  * @returns Socket.IO server instance
  */
-function initializeSocketServer(server: http.Server, userService: any) {
+function initializeSocketServer(
+  server: http.Server,
+  userService: { findUserById: (id: string) => Promise<User | null> }
+): Server {
+  // Check if we're in a serverless environment
+  const isServerless = process.env.VERCEL === '1';
+  
+  if (isServerless) {
+    console.log('Running in serverless environment, Socket.IO functionality may be limited');
+  }
+
   const io = new Server(server, {
     cors: {
       origin: process.env.CLIENT_URL || "*",
@@ -115,32 +125,58 @@ function notifyMoneyTransfer(
   senderUser: { id: string; firstName: string; lastName: string },
   recipientUser: { id: string; firstName: string; lastName: string }
 ) {
+  // Safety check for serverless environments
+  if (!io) {
+    console.log('Socket.IO instance not available, skipping notification');
+    return;
+  }
+  
   try {
+    // Check if users map exists in serverless context
+    if (!connectedUsers || typeof connectedUsers.get !== 'function') {
+      console.log('Connected users map not available, skipping notification');
+      return;
+    }
+    
     const recipientConnection = connectedUsers.get(recipientUser.id);
 
-    if (recipientConnection) {
+    if (recipientConnection && recipientConnection.socketId) {
       // Emit to recipient that they received money
-      io.to(recipientConnection.socketId).emit("money-transfer", {
-        from: `${senderUser.firstName} ${senderUser.lastName}`,
-        amount: transaction.amount,
-        timestamp: transaction.createdAt,
-      });
+      try {
+        io.to(recipientConnection.socketId).emit("money-transfer", {
+          from: `${senderUser.firstName} ${senderUser.lastName}`,
+          amount: transaction.amount,
+          timestamp: transaction.createdAt,
+        });
+        console.log(`Notification sent to recipient ${recipientUser.id}`);
+      } catch (emitError) {
+        console.error('Error emitting to recipient:', emitError);
+      }
+    } else {
+      console.log(`Recipient ${recipientUser.id} not connected or has invalid socket ID`);
     }
 
     const senderConnection = connectedUsers.get(senderUser.id);
 
-    if (senderConnection) {
+    if (senderConnection && senderConnection.socketId) {
       // Emit to sender that they sent money
-      io.to(senderConnection.socketId).emit("money-sent", {
-        to: `${recipientUser.firstName} ${recipientUser.lastName}`,
-        amount: transaction.amount,
-        timestamp: transaction.createdAt,
-      });
+      try {
+        io.to(senderConnection.socketId).emit("money-sent", {
+          to: `${recipientUser.firstName} ${recipientUser.lastName}`,
+          amount: transaction.amount,
+          timestamp: transaction.createdAt,
+        });
+        console.log(`Notification sent to sender ${senderUser.id}`);
+      } catch (emitError) {
+        console.error('Error emitting to sender:', emitError);
+      }
+    } else {
+      console.log(`Sender ${senderUser.id} not connected or has invalid socket ID`);
     }
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("Error emitting money transfer event:", errorMessage);
+    console.error("Error in notifyMoneyTransfer:", errorMessage);
   }
 }
 
@@ -150,7 +186,17 @@ function notifyMoneyTransfer(
  * @returns True if user is connected, false otherwise
  */
 function isUserConnected(userId: string): boolean {
-  return connectedUsers.has(userId);
+  try {
+    // Safety check for serverless environments
+    if (!connectedUsers || typeof connectedUsers.has !== 'function') {
+      console.log('Connected users map not available in isUserConnected');
+      return false;
+    }
+    return connectedUsers.has(userId);
+  } catch (error) {
+    console.error('Error checking if user is connected:', error);
+    return false;
+  }
 }
 
 export { initializeSocketServer, notifyMoneyTransfer, isUserConnected };

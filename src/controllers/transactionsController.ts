@@ -10,7 +10,6 @@ import {
 import { Decimal } from "decimal.js";
 import { JwtPayload } from "../types";
 import { notifyMoneyTransfer, isUserConnected } from "../middleware/socketMiddleware";
-import { io } from "../server";
 
 interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
@@ -178,35 +177,48 @@ export const transferFunds = async (
     );
 
     // Send real-time notification if recipient is online
-    try {
-      // Extract sender and recipient information from the transaction
-      const senderUser = {
-        id: transaction.fromAccount.user.id,
-        firstName: transaction.fromAccount.user.firstName,
-        lastName: transaction.fromAccount.user.lastName
-      };
+    // Extract sender and recipient information from the transaction
+    const senderUser = {
+      id: transaction.fromAccount.user.id,
+      firstName: transaction.fromAccount.user.firstName,
+      lastName: transaction.fromAccount.user.lastName
+    };
 
-      const recipientUser = {
-        id: transaction.toAccount.user.id,
-        firstName: transaction.toAccount.user.firstName,
-        lastName: transaction.toAccount.user.lastName
-      };
+    const recipientUser = {
+      id: transaction.toAccount.user.id,
+      firstName: transaction.toAccount.user.firstName,
+      lastName: transaction.toAccount.user.lastName
+    };
+    
+    // Check if the recipient is connected before attempting notification
+    if (isUserConnected(recipientUser.id)) {
+      try {
+        // Get the io instance from the request object
+        // This approach avoids circular dependencies and works in serverless environments
+        const io = req.app.get('io');
+        
+        if (io) {
+          // Only send notification if Socket.IO is properly initialized
+          notifyMoneyTransfer(
+            io,
+            {
+              amount: amountDecimal.toNumber(),
+              createdAt: new Date()
+            },
+            senderUser,
+            recipientUser
+          );
+        } else {
+          console.log("Socket.IO not available, skipping notification");
+        }
+      } catch (notificationError) {
+        // Log notification error but don't fail the transaction
+        console.error("Error sending money transfer notification:", notificationError);
+        // Transaction still succeeded, so we continue
+      }
+    } else {
+      console.log(`Recipient ${recipientUser.id} is not online, skipping notification`);
 
-      // Only send notification if recipient is online
-      // The function will not fail if recipient is offline
-      notifyMoneyTransfer(
-        io,
-        {
-          amount: amountDecimal.toNumber(),
-          createdAt: new Date()
-        },
-        senderUser,
-        recipientUser
-      );
-    } catch (notificationError) {
-      // Log notification error but don't fail the transaction
-      console.error("Error sending money transfer notification:", notificationError);
-      // Transaction still succeeded, so we continue
     }
 
     return res.status(HTTP_STATUS.CREATED).json({

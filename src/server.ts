@@ -42,11 +42,28 @@ app.get("/", (req, res) => {
 const httpPort = process.env.HTTP_PORT || "3001";
 const server = http.createServer(app);
 
-// Initialize Socket.IO with the HTTP server
-const io = initializeSocketServer(server, userService);
+// Check if we're in a serverless environment (like Vercel)
+const isServerless = process.env.VERCEL === '1';
 
-// Export io instance for use in other parts of the application
-export { io };
+// Initialize Socket.IO conditionally
+let io;
+try {
+  // Only initialize Socket.IO in non-serverless environments or if explicitly enabled
+  if (!isServerless || process.env.ENABLE_SOCKET_IN_SERVERLESS === 'true') {
+    io = initializeSocketServer(server, userService);
+    // Make io available to the Express app
+    app.set('io', io);
+    console.log('Socket.IO initialized successfully');
+  } else {
+    console.log('Running in serverless environment, Socket.IO initialization skipped');
+    // Set a null value so the app knows Socket.IO is not available
+    app.set('io', null);
+  }
+} catch (error) {
+  console.error('Error initializing Socket.IO:', error);
+  // Set a null value so the app knows Socket.IO is not available
+  app.set('io', null);
+}
 
 // Start the server
 server.listen(httpPort, () => {

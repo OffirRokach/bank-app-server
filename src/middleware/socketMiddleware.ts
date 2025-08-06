@@ -3,7 +3,6 @@ import { Server, Socket } from "socket.io";
 import http from "http";
 import { User, JwtPayload } from "../types";
 
-// Define types for user connections
 interface ConnectedUser {
   socketId: string;
   firstName: string;
@@ -11,7 +10,6 @@ interface ConnectedUser {
   email: string;
 }
 
-// Define extended socket interface with user properties
 interface AuthenticatedSocket extends Socket {
   userId: string;
   user: User;
@@ -31,10 +29,12 @@ function initializeSocketServer(
   userService: { findUserById: (id: string) => Promise<User | null> }
 ): Server {
   // Check if we're in a serverless environment
-  const isServerless = process.env.VERCEL === '1';
-  
+  const isServerless = process.env.VERCEL === "1";
+
   if (isServerless) {
-    console.log('Running in serverless environment, Socket.IO functionality may be limited');
+    console.log(
+      "Running in serverless environment, Socket.IO functionality may be limited"
+    );
   }
 
   const io = new Server(server, {
@@ -68,7 +68,6 @@ function initializeSocketServer(
       const userId = decoded.userId;
       const user = await userService.findUserById(userId);
 
-      // Cast the socket to include our custom properties
       (socket as any).userId = userId;
       (socket as any).user = user;
 
@@ -127,17 +126,17 @@ function notifyMoneyTransfer(
 ) {
   // Safety check for serverless environments
   if (!io) {
-    console.log('Socket.IO instance not available, skipping notification');
+    console.log("Socket.IO instance not available, skipping notification");
     return;
   }
-  
+
   try {
     // Check if users map exists in serverless context
-    if (!connectedUsers || typeof connectedUsers.get !== 'function') {
-      console.log('Connected users map not available, skipping notification');
+    if (!connectedUsers || typeof connectedUsers.get !== "function") {
+      console.log("Connected users map not available, skipping notification");
       return;
     }
-    
+
     const recipientConnection = connectedUsers.get(recipientUser.id);
 
     if (recipientConnection && recipientConnection.socketId) {
@@ -150,10 +149,12 @@ function notifyMoneyTransfer(
         });
         console.log(`Notification sent to recipient ${recipientUser.id}`);
       } catch (emitError) {
-        console.error('Error emitting to recipient:', emitError);
+        console.error("Error emitting to recipient:", emitError);
       }
     } else {
-      console.log(`Recipient ${recipientUser.id} not connected or has invalid socket ID`);
+      console.log(
+        `Recipient ${recipientUser.id} not connected or has invalid socket ID`
+      );
     }
 
     const senderConnection = connectedUsers.get(senderUser.id);
@@ -168,10 +169,12 @@ function notifyMoneyTransfer(
         });
         console.log(`Notification sent to sender ${senderUser.id}`);
       } catch (emitError) {
-        console.error('Error emitting to sender:', emitError);
+        console.error("Error emitting to sender:", emitError);
       }
     } else {
-      console.log(`Sender ${senderUser.id} not connected or has invalid socket ID`);
+      console.log(
+        `Sender ${senderUser.id} not connected or has invalid socket ID`
+      );
     }
   } catch (error) {
     const errorMessage =
@@ -188,13 +191,13 @@ function notifyMoneyTransfer(
 function isUserConnected(userId: string): boolean {
   try {
     // Safety check for serverless environments
-    if (!connectedUsers || typeof connectedUsers.has !== 'function') {
-      console.log('Connected users map not available in isUserConnected');
+    if (!connectedUsers || typeof connectedUsers.has !== "function") {
+      console.log("Connected users map not available in isUserConnected");
       return false;
     }
     return connectedUsers.has(userId);
   } catch (error) {
-    console.error('Error checking if user is connected:', error);
+    console.error("Error checking if user is connected:", error);
     return false;
   }
 }

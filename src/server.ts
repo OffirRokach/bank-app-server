@@ -37,7 +37,6 @@ app.get("/", (req, res) => {
 const httpPort = process.env.PORT || "3001";
 const server = http.createServer(app);
 
-// Initialize Socket.IO conditionally
 let io;
 try {
   io = initializeSocketServer(server, userService);

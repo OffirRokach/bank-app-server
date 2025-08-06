@@ -23,7 +23,7 @@ const app = express();
 // Configure CORS to accept requests from the client
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : "*",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );

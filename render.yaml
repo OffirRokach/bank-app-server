@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: my-api
+    name: bank-app-server
     env: node
     buildCommand: npm run build
     startCommand: npm start

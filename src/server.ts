@@ -21,12 +21,7 @@ dotenv.config();
 
 const app = express();
 // Configure CORS to accept requests from the client
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);

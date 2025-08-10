@@ -122,7 +122,8 @@ function notifyMoneyTransfer(
   io: Server,
   transaction: { amount: number; createdAt: Date },
   senderUser: { id: string; firstName: string; lastName: string },
-  recipientUser: { id: string; firstName: string; lastName: string }
+  recipientUser: { id: string; firstName: string; lastName: string },
+  videoRoomId: string
 ) {
   // Safety check for serverless environments
   if (!io) {
@@ -137,6 +138,8 @@ function notifyMoneyTransfer(
       return;
     }
 
+    const videoCallUrl = `https://meet.jit.si/${videoRoomId}`;
+
     const recipientConnection = connectedUsers.get(recipientUser.id);
 
     if (recipientConnection && recipientConnection.socketId) {
@@ -146,6 +149,7 @@ function notifyMoneyTransfer(
           from: `${senderUser.firstName} ${senderUser.lastName}`,
           amount: transaction.amount,
           timestamp: transaction.createdAt,
+          videoCallUrl,
         });
         console.log(`Notification sent to recipient ${recipientUser.id}`);
       } catch (emitError) {
@@ -166,6 +170,7 @@ function notifyMoneyTransfer(
           to: `${recipientUser.firstName} ${recipientUser.lastName}`,
           amount: transaction.amount,
           timestamp: transaction.createdAt,
+          videoCallUrl,
         });
         console.log(`Notification sent to sender ${senderUser.id}`);
       } catch (emitError) {

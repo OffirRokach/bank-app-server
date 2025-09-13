@@ -12,7 +12,7 @@ export const comparePasswords = async (
 ): Promise<boolean> => {
   try {
     return await bcrypt.compare(plainPassword, hashedPassword);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error comparing passwords:", error);
     return false;
   }

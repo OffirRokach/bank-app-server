@@ -140,6 +140,7 @@ function notifyMoneyTransfer(
 
     const videoCallUrl = `https://meet.jit.si/${videoRoomId}`;
 
+    // Try to notify recipient
     const recipientConnection = connectedUsers.get(recipientUser.id);
 
     if (recipientConnection && recipientConnection.socketId) {
@@ -157,15 +158,17 @@ function notifyMoneyTransfer(
       }
     } else {
       console.log(
-        `Recipient ${recipientUser.id} not connected or has invalid socket ID`
+        `Recipient ${recipientUser.id} not connected or has invalid socket ID, skipping recipient notification`
       );
     }
 
+    // Try to notify sender
     const senderConnection = connectedUsers.get(senderUser.id);
 
     if (senderConnection && senderConnection.socketId) {
       // Emit to sender that they sent money
       try {
+        console.log(`Attempting to send notification to sender ${senderUser.id} with socket ID ${senderConnection.socketId}`);
         io.to(senderConnection.socketId).emit("money-sent", {
           to: `${recipientUser.firstName} ${recipientUser.lastName}`,
           amount: transaction.amount,
@@ -178,7 +181,7 @@ function notifyMoneyTransfer(
       }
     } else {
       console.log(
-        `Sender ${senderUser.id} not connected or has invalid socket ID`
+        `Sender ${senderUser.id} not connected or has invalid socket ID, skipping sender notification`
       );
     }
   } catch (error) {

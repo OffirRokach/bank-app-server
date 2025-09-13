@@ -197,7 +197,9 @@ export const transferFunds = async (
 
     const io = req.app.get("io");
 
-    if (io && isUserConnected(recipientUser.id)) {
+    // Always attempt to notify users if Socket.IO is available
+    if (io) {
+      console.log('Socket.IO available, sending notifications');
       // Notify both users about the transfer + video call in one function
       notifyMoneyTransfer(
         io,
@@ -210,9 +212,7 @@ export const transferFunds = async (
         videoRoomId
       );
     } else {
-      console.log(
-        `Recipient ${recipientUser.id} is not connected or Socket.IO not available, skipping notification`
-      );
+      console.log('Socket.IO not available, skipping notification');
     }
     return res.status(HTTP_STATUS.CREATED).json({
       success: true,

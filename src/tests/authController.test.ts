@@ -1,16 +1,11 @@
 import { describe, expect, test, jest, beforeEach } from "@jest/globals";
 import { signup, login } from "../controllers/authController";
 import { mockRequest, mockResponse } from "./setup";
-import {
-  findUserByEmail,
-  updateUserLastLoginAt,
-} from "../repositories/userRepository";
-import { getDefaultAccountByUserId } from "../repositories/accountRepository";
+import { findUserByEmail } from "../repositories/userRepository";
 import { comparePasswords, hashPassword } from "../utils/passwordUtils";
 import { sendVerificationEmail } from "../utils/emailUtils";
 import { HTTP_STATUS } from "../constants/httpStatusCodes";
 import prisma from "../services/databaseService";
-import jwt from "jsonwebtoken";
 
 // Mock the repositories and utilities
 const mockedFindUserByEmail = jest.mocked(findUserByEmail);
